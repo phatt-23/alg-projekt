@@ -18,5 +18,6 @@ __uint128_t bit_conv::u128_from(const char* t_str) {
 }
 
 __uint64_t bit_conv::u64_from(const char* t_str) {
+    (void) t_str;
     return 0;
 }

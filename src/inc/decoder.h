@@ -23,6 +23,7 @@ public:
     
     enum PrintType {
         Human,
+        Original,
         Bits,
     };
 
@@ -35,12 +36,12 @@ public:
     void sort_ms();
     void rm_dups();
     const std::vector<Measurement*>* find_exts();
-    Measurement* get_ext(Extreme t_ext) const;
+    Measurement* get_ext(PayloadType t_type, Extreme t_ext) const;
+    void set_ext(PayloadType t_type, Extreme t_ext, Measurement* t_new);
     Measurement* get_ms(const char* t_time) const;
     std::vector<Interval*>* print_hist(PayloadType t_type, uint32_t t_intervals);
 
     void print_ms(PrintType t_type);
-    void dump();
 };
 
 #endif//__decoder_h__

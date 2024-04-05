@@ -18,13 +18,19 @@ class Measurement {
     uint8_t m_payload[5];
 
 public:
+    Measurement();
     Measurement(const std::string& t_time, const std::string& t_payload);
     ~Measurement();
     uint64_t get_time_cmp() const;
     uint64_t get_payload_cmp() const;
     const uint8_t* get_time_arr() const;
     const uint8_t* get_payload_arr() const;
-    std::string get_formated();
+    std::string get_og_fmt();
+    std::string get_fmtd_pl();
+    std::string get_fmtd_tm();
+    uint16_t get_pl_vltg();
+    float get_pl_temp();
+    float get_pl_mstr();
 };
 
 #endif//__measuerement_h__

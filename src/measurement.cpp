@@ -2,6 +2,11 @@
 #include "inc/bit_conversion.h"
 #include "inc/precomp.h"
 
+Measurement::Measurement() {
+    memset(m_time, 0, sizeof(uint8_t) * (sizeof(m_time)/sizeof(*m_time)));
+    memset(m_payload, 0, sizeof(uint8_t) * (sizeof(m_time)/sizeof(*m_time)));
+}
+
 Measurement::Measurement(const std::string& t_time, const std::string& t_payload) 
 {
     memset(m_time, 0, sizeof(uint8_t) * (sizeof(m_time)/sizeof(*m_time)));
@@ -110,7 +115,7 @@ const uint8_t* Measurement::get_payload_arr() const {
 #include <cstring>
 #include <cstdlib>
 
-std::string Measurement::get_formated() {
+std::string Measurement::get_og_fmt() {
     uint16_t l_time[5] = { 0 };
     for(size_t i = 0; i < 5; ++i) 
         l_time[i] = m_time[i];
@@ -121,20 +126,64 @@ std::string Measurement::get_formated() {
     uint16_t l_hh_num = (l_time[2] & 0x01) << 4 | l_time[3] >> 4;
     uint16_t l_mn_num = (l_time[3] & 0x0f) << 2 | l_time[4] >> 6;
     uint16_t l_ss_num = (l_time[4] & 0x3f);
-    /*
-    printf("year: %.14b -> %.4d\n", l_yy_num, l_yy_num);
-    printf("month: %.4b -> %.2d\n", l_mm_num, l_mm_num);
-    printf("day: %.5b -> %.2d\n", l_dd_num, l_dd_num);
-    printf("hour: %.5b -> %.2d\n", l_hh_num, l_hh_num);
-    printf("min: %.6b -> %.2d\n", l_mn_num, l_mn_num);
-    printf("sec: %.6b -> %.2d\n", l_ss_num, l_ss_num);
-    */
+
+
     char l_str[__buffer_len__] = { 0 };
     sprintf(
-        l_str, "%.2d-%.2d-%.2dT%.2d:%.2d:%.2d %.2X%.2X%.2X%.2X%.2X\n", 
+        l_str, "%.2d-%.2d-%.2dT%.2d:%.2d:%.2d %.2X%.2X%.2X%.2X%.2X", 
         l_yy_num, l_mm_num, l_dd_num,l_hh_num, l_mn_num, l_ss_num,
         m_payload[0], m_payload[1], m_payload[2], m_payload[3], m_payload[4]
     );
     
     return std::string(l_str);
 }
+
+std::string Measurement::get_fmtd_pl() {
+    uint32_t l_vltg = 30 * m_payload[0];
+    float l_C = 0.1 * float(256 * m_payload[1] + m_payload[2]);
+    float l_M = 0.1 * float(256 * m_payload[3] + m_payload[4]);
+
+    char l_str[__buffer_len__] = { 0 };
+    sprintf(
+        l_str, 
+        "{ V(mV): %d, t(C): %.2f, M(%%): %.2f }",
+        l_vltg, l_C, l_M
+    );
+
+    return std::string(l_str);
+}
+
+std::string Measurement::get_fmtd_tm() {
+    uint16_t l_time[5] = { 0 };
+    for(size_t i = 0; i < 5; ++i) 
+        l_time[i] = m_time[i];
+
+    uint16_t l_yy_num = l_time[0] << 6 | m_time[1] >> 2;
+    uint16_t l_mm_num = (l_time[1] & 0x03) << 2 | l_time[2] >> 6;
+    uint16_t l_dd_num = (l_time[2] >> 1) & 0x1f;
+    uint16_t l_hh_num = (l_time[2] & 0x01) << 4 | l_time[3] >> 4;
+    uint16_t l_mn_num = (l_time[3] & 0x0f) << 2 | l_time[4] >> 6;
+    uint16_t l_ss_num = (l_time[4] & 0x3f);
+
+    char l_str[__buffer_len__] = { 0 };
+    sprintf(
+        l_str,
+        "{ (%.4d.%.2d.%.2d) %.2d:%.2d:%.2d }",
+        l_yy_num, l_mm_num, l_dd_num,l_hh_num, l_mn_num, l_ss_num
+    );
+    
+    return std::string(l_str);
+}
+
+uint16_t Measurement::get_pl_vltg() {
+    return 30 * m_payload[0];
+}
+
+float Measurement::get_pl_temp() {
+    return 0.1 * float(256 * m_payload[1] + m_payload[2]);
+}
+
+float Measurement::get_pl_mstr() {
+    return 0.1 * float(256 * m_payload[3] + m_payload[4]);
+}
+

@@ -7,6 +7,8 @@ Decoder::Decoder()
     if(__decoder_dbg__) {
         __info_all__ __endl__ 
     }
+    for(size_t i = 0; i < 4; ++i)
+        m_extremes.emplace_back(nullptr);
 }
 
 Decoder::Decoder(const char* t_path) {
@@ -20,6 +22,8 @@ Decoder::~Decoder() {
     if(__decoder_dbg__) {
         __info_all__ __endl__
     }
+    for(size_t i = 0; i < 4; ++i)
+        m_extremes.emplace_back(nullptr);
 }
 
 
@@ -47,12 +51,14 @@ bool Decoder::write_to(const char* t_path, PrintType t_type) {
         __info_all__ printf("began writing to file %s\n", t_path);
     }
 
-    std::ofstream l_file(t_path, std::ios_base::binary);
+    std::ofstream l_file(t_path);
     if(l_file.is_open()) {
         switch (t_type) {
             case PrintType::Bits:
                 // doesn't write individual bits 
                 // but does it in form of a decimal number 
+                l_file.close();
+                l_file.open(t_path, std::ios::binary);
                 for(Measurement* m : m_measurements) {
                     l_file 
                         << m->get_time_cmp() 
@@ -61,54 +67,33 @@ bool Decoder::write_to(const char* t_path, PrintType t_type) {
                         << std::endl;
                 }
                 break;
-            case PrintType::Human:
-                // TODO: composes a human readable file 
+            case PrintType::Original:
                 for(Measurement* m : m_measurements) {
-                    std::cout << m->get_formated();
+                    l_file << m->get_og_fmt() << std::endl;
                 }
                 break;
-            default: break;
+            case PrintType::Human:
+                char l_str[__buffer_len__] = { 0 };
+                for(size_t i = 0; i < m_measurements.size(); ++i) {
+                    sprintf(l_str,
+                        "[%ld]\ttime %s, payload %s", 
+                        i, m_measurements.at(i)->get_fmtd_tm().c_str(), 
+                        m_measurements.at(i)->get_fmtd_pl().c_str()
+                    );
+                    l_file << l_str << std::endl;
+                }
+                break;
         }
+        l_file.close();
         return true;
     }
 
     __error_all__ printf("failed to write into file %s\n", t_path);
     return false;
 }
-/*
-template<typename T>
-void quicksort(T* arr_t, int start, int end) {
-    if (start >= end) return;
-    int p = partition(arr_t, start, end);
-    quicksort(arr_t, start, p - 1);
-    quicksort(arr_t, p + 1, end);
-}
-
-template<typename T>
-int partition(T* arr, size_t start, size_t end) {
-    T pivot = arr[start];
-    size_t count = 0;
-    for(size_t i = start + 1; i <= end; ++i) {
-        if(arr[i] <= pivot) count++;
-    }
-
-    size_t pivot_index = start + count;
-    swap(&arr[pivot_index], &arr[start]);
-    
-    size_t i = start; 
-    size_t j = end;
-    while(i < pivot_index && j > pivot_index) {
-        while(arr[i] <= pivot) i++;
-        while(arr[j] > pivot) j--;
-        if(i < pivot_index && j > pivot_index) {
-            swap(&arr[i++], &arr[j--]);
-        }
-    }
-    return pivot_index;
-}
-*/
 
 void Decoder::sort_ms() {
+    uint32_t l_fn_calls = 0;
     static std::function<size_t(std::vector<Measurement*>*, size_t, size_t)> l_partition 
         = [&](std::vector<Measurement*>* t_ms, size_t t_start, size_t t_end) -> size_t 
         {
@@ -138,6 +123,7 @@ void Decoder::sort_ms() {
     static std::function<void(std::vector<Measurement*>*, int32_t, int32_t)> l_qsort 
         = [&](std::vector<Measurement*>* t_ms, int32_t t_start, int32_t t_end) -> void
         {
+            l_fn_calls++;
             if(t_start >= t_end) return;
             size_t l_p = l_partition(t_ms, t_start, t_end);
             l_qsort(t_ms, t_start, l_p - 1);
@@ -148,13 +134,12 @@ void Decoder::sort_ms() {
 
     l_qsort(&m_measurements, 0, m_measurements.size() - 1);
 
-    if(__decoder_dbg__) { __info_all__ printf("done sorting measurements by time\n"); }
-    
+    if(__decoder_dbg__) { __info_all__ printf("done sorting measurements by times (fn-calls: %d)\n", l_fn_calls); }
 }
 
 void Decoder::rm_dups() {
     if(__decoder_dbg__) { __info_all__ printf("began removing duplicates\n"); }
-    for(int i = 1; i < m_measurements.size(); ++i) {
+    for(size_t i = 1; i < m_measurements.size(); ++i) {
         if(m_measurements[i - 1]->get_time_cmp() == m_measurements[i]->get_time_cmp()) {
             m_measurements.erase(m_measurements.begin() + i-- - 1);
         }
@@ -163,25 +148,126 @@ void Decoder::rm_dups() {
 }
 
 const std::vector<Measurement*>* Decoder::find_exts() {
+    if(__decoder_dbg__) { __info_all__ printf("finding the extremes\n"); }
+    for(Measurement*& m : m_extremes) {
+        if(m == nullptr) {
+            m = m_measurements.at(0);
+        }
+    }
+
+    // print extremes -> might factor out to another function
+    printf("min temperature: %.2f\n", get_ext(Temperature, Min)->get_pl_temp());
+    printf("max temperature: %.2f\n", get_ext(Temperature, Max)->get_pl_temp());
+    printf("min moisture: %.2f\n", get_ext(Moisture, Min)->get_pl_mstr());
+    printf("max moisture: %.2f\n", get_ext(Moisture, Max)->get_pl_mstr());
+
+    for(Measurement* m : m_measurements) {
+        if(m->get_pl_temp() < get_ext(Temperature, Min)->get_pl_temp()) {
+            printf("setting min T\n");
+            set_ext(Temperature, Min, m);
+        }
+        if(m->get_pl_temp() > get_ext(Temperature, Max)->get_pl_temp()) {
+            printf("setting max T\n");
+            set_ext(Temperature, Max, m);
+        }
+        if(m->get_pl_mstr() < get_ext(Moisture, Min)->get_pl_mstr()) {
+            set_ext(Moisture, Min, m);
+        }
+        if(m->get_pl_mstr() > get_ext(Moisture, Max)->get_pl_mstr()) {
+            set_ext(Moisture, Max, m);
+        }
+    #if 0
+    #endif
+    }
+
+    
+    return &m_extremes;
+}
+
+Measurement* Decoder::get_ext(PayloadType t_type, Extreme t_ext) const {
+    switch(t_type) {
+        case PayloadType::Temperature:
+            switch(t_ext) {
+                case Extreme::Min:
+                    if(m_extremes.at(0) != nullptr)
+                        return m_extremes.at(0);
+                    break;
+                case Extreme::Max:
+                    if(m_extremes.at(1) != nullptr)
+                        return m_extremes.at(1);
+                    break;
+                default: break;
+            }
+            break;
+        case PayloadType::Moisture:
+            switch(t_ext) {
+                case Extreme::Min:
+                    if(m_extremes.at(2) != nullptr)
+                        return m_extremes.at(2);
+                    break;
+                case Extreme::Max:
+                    if(m_extremes.at(3) != nullptr)
+                        return m_extremes.at(3);
+                    break;
+                default: break;
+            }
+            break;
+        default: break;
+    }
+    __error_all__ printf("requested extreme not defined / found\n");
     return nullptr;
 }
 
-Measurement* Decoder::get_ext(Extreme t_ext) const {
-    return nullptr;
+void Decoder::set_ext(PayloadType t_type, Extreme t_ext, Measurement* t_new) {
+    if(t_new != nullptr) {
+        switch(t_type) {
+            case PayloadType::Temperature:
+                switch(t_ext) {
+                    case Extreme::Min:
+                        if(m_extremes.at(0) != nullptr)
+                            m_extremes.at(0) = t_new;
+                        break;
+                    case Extreme::Max:
+                        if(m_extremes.at(1) != nullptr)
+                            m_extremes.at(1) = t_new;
+                        break;
+                    default: break;
+                }
+                break;
+            case PayloadType::Moisture:
+                switch(t_ext) {
+                    case Extreme::Min:
+                        if(m_extremes.at(2) != nullptr)
+                            m_extremes.at(2) = t_new;
+                        break;
+                    case Extreme::Max:
+                        if(m_extremes.at(3) != nullptr)
+                            m_extremes.at(3) = t_new;
+                        break;
+                    default: break;
+                }
+                break;
+            default: break;
+        }
+    }
+    __error_all__ printf("requested extreme for setting not defined / found\n");
 }
+
 
 Measurement* Decoder::get_ms(const char* t_time) const {
+    (void) t_time;
     return nullptr;
     
 }
 
 std::vector<Interval*>* Decoder::print_hist(PayloadType t_type, uint32_t t_intervals) {
+    (void) t_type;
+    (void) t_intervals;
     return nullptr;
-    
 }
 
 void Decoder::print_ms(PrintType t_type) {
-    __info_all__ printf("printing out the measurements\n");
+    if(__decoder_dbg__) { __info_all__ printf("printing out the measurements\n"); }
     switch (t_type) {
         case PrintType::Bits:
             for(size_t i = 0; i < m_measurements.size(); ++i) {
@@ -195,14 +281,22 @@ void Decoder::print_ms(PrintType t_type) {
             }
             break;
         case PrintType::Human:
-            
+            for(size_t i = 0; i < m_measurements.size(); ++i) {
+                printf(
+                    "[%ld]\ttime %s, payload %s\n", 
+                    i, m_measurements.at(i)->get_fmtd_tm().c_str(), 
+                    m_measurements.at(i)->get_fmtd_pl().c_str()
+                );
+            }
+            break;
+        case PrintType::Original:
+            for(Measurement* m : m_measurements) {
+                std::cout << m->get_og_fmt() << std::endl;
+            }
             break;
         default: break;
     }
-    __info_all__ printf("done printing the measurements\n");
+    if(__decoder_dbg__) { __info_all__ printf("done printing the measurements\n"); }
 }
 
-void Decoder::dump() {
-    
-}
 
