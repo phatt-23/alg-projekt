@@ -1,0 +1,13 @@
+časová razítka 1.1.2023 - 17.6.2023, záznamy jsou posílany každou hodinu
+
+celkový počet záznamů včetně duplicit: 7334
+
+celkový počet záznamů bez duplicit: 4032
+
+maximální teplota = 39.9
+
+minimální teplota = 0.3
+
+maximální vlhkost = 89.9
+
+minimální vlhkost = 20
