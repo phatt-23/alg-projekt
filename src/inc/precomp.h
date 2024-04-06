@@ -31,10 +31,15 @@
 #define __error_all__ __error__ __file_line__ __function__ printf(__bld__ " $" __reset__ " ");
 
 
+#if 0 // 1 if debugging
 #define __decoder_dbg__     true
 #define __measurement_dbg__ true
 #define __interval_dbg__    true
-
+#else // release
+#define __decoder_dbg__     false
+#define __measurement_dbg__ false
+#define __interval_dbg__    false
+#endif
 
 
 #endif//__precomp_h__

@@ -7,13 +7,13 @@
 class Interval { // can be used for both temperature and moisture
     uint32_t m_freq;
 
-    // these measurements specify its range
-    Measurement* m_lwr_bound;
-    Measurement* m_upr_bound;
-
     // these floats hold the possible range
     float m_lwr_range_fl;
     float m_upr_range_fl;
+
+    // these measurements specify its range
+    Measurement* m_lwr_bound;
+    Measurement* m_upr_bound;
 
     Ms::PayloadType m_type;
 
