@@ -7,26 +7,18 @@ int main(int argc, char** argv) {
     Decoder de{}; 
 
     de.read_in(argv[1]); 
-    // de.print_ms(Decoder::Original);
 
     de.sort_ms();
 
-    // print the measurement after sorting
-    // de.print_ms(Decoder::PrintType::Original);
-
-    // removes dups after sorting
     de.rm_dups();
 
-    // print after removal
     de.print_ms(Decoder::PrintType::Human);
-    
-    // write to a file in bits format
-    de.write_to(argv[2], Decoder::PrintType::Original);
-    
-    // printout a human readable output
-    // de.print_ms(Decoder::PrintType::Human);
-
     de.find_exts();
+    
+    de.write_to(argv[2], Decoder::PrintType::Original);
+
+    de.print_hist(Ms::PayloadType::Moisture, 14);
+    de.print_hist(Ms::PayloadType::Temperature, 14);
 
     return 0;
 }

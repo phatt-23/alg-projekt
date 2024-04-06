@@ -14,6 +14,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <algorithm>
+#include <cmath>
 #include <utility>
 #include "colours.h"
 
@@ -32,6 +33,8 @@
 
 #define __decoder_dbg__     true
 #define __measurement_dbg__ true
+#define __interval_dbg__    true
+
 
 
 #endif//__precomp_h__

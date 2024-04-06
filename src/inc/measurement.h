@@ -13,6 +13,19 @@
 // - Minute => 0..59 (2^6)
 // - Second => 0..59 (2^6)
 
+namespace Ms {
+    enum Extreme {
+        Min,
+        Max,
+    };
+
+    enum PayloadType {
+        Temperature,
+        Moisture,
+    };
+}
+
+
 class Measurement {
     uint8_t m_time[5];
     uint8_t m_payload[5];

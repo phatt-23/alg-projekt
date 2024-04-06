@@ -1,4 +1,5 @@
 #include "inc/decoder.h"
+#include "inc/interval.h"
 #include "inc/measurement.h"
 #include "inc/precomp.h"
 
@@ -43,52 +44,6 @@ bool Decoder::read_in(const char* t_path) {
         return true;
     }
     __error_all__ printf("failed to read the file %s\n", t_path);
-    return false;
-}
-
-bool Decoder::write_to(const char* t_path, PrintType t_type) {
-    if(__decoder_dbg__) {
-        __info_all__ printf("began writing to file %s\n", t_path);
-    }
-
-    std::ofstream l_file(t_path);
-    if(l_file.is_open()) {
-        switch (t_type) {
-            case PrintType::Bits:
-                // doesn't write individual bits 
-                // but does it in form of a decimal number 
-                l_file.close();
-                l_file.open(t_path, std::ios::binary);
-                for(Measurement* m : m_measurements) {
-                    l_file 
-                        << m->get_time_cmp() 
-                        << " " 
-                        << m->get_payload_cmp() 
-                        << std::endl;
-                }
-                break;
-            case PrintType::Original:
-                for(Measurement* m : m_measurements) {
-                    l_file << m->get_og_fmt() << std::endl;
-                }
-                break;
-            case PrintType::Human:
-                char l_str[__buffer_len__] = { 0 };
-                for(size_t i = 0; i < m_measurements.size(); ++i) {
-                    sprintf(l_str,
-                        "[%ld]\ttime %s, payload %s", 
-                        i, m_measurements.at(i)->get_fmtd_tm().c_str(), 
-                        m_measurements.at(i)->get_fmtd_pl().c_str()
-                    );
-                    l_file << l_str << std::endl;
-                }
-                break;
-        }
-        l_file.close();
-        return true;
-    }
-
-    __error_all__ printf("failed to write into file %s\n", t_path);
     return false;
 }
 
@@ -157,53 +112,53 @@ const std::vector<Measurement*>* Decoder::find_exts() {
 
     for(size_t i = 0; i < m_measurements.size(); ++i) {
         Measurement* m = m_measurements.at(i);
-        if(m->get_pl_temp() < get_ext(Temperature, Min)->get_pl_temp()) {
-            set_ext(Temperature, Min, m);
+        if(m->get_pl_temp() < get_ext(Ms::Temperature, Ms::Min)->get_pl_temp()) {
+            set_ext(Ms::Temperature, Ms::Min, m);
         }
-        if(m->get_pl_temp() > get_ext(Temperature, Max)->get_pl_temp()) {
-            set_ext(Temperature, Max, m);
+        if(m->get_pl_temp() > get_ext(Ms::Temperature, Ms::Max)->get_pl_temp()) {
+            set_ext(Ms::Temperature, Ms::Max, m);
         }
-        if(m->get_pl_mstr() < get_ext(Moisture, Min)->get_pl_mstr()) {
-            set_ext(Moisture, Min, m);
+        if(m->get_pl_mstr() < get_ext(Ms::Moisture, Ms::Min)->get_pl_mstr()) {
+            set_ext(Ms::Moisture, Ms::Min, m);
         }
-        if(m->get_pl_mstr() > get_ext(Moisture, Max)->get_pl_mstr()) {
-            set_ext(Moisture, Max, m);
+        if(m->get_pl_mstr() > get_ext(Ms::Moisture, Ms::Max)->get_pl_mstr()) {
+            set_ext(Ms::Moisture, Ms::Max, m);
         }
     #if 0
     #endif
     }
 
     // print extremes -> might factor out to another function
-    printf("min temperature: %2.2f %%\n", get_ext(Temperature, Min)->get_pl_temp());
-    printf("max temperature: %2.2f %%\n", get_ext(Temperature, Max)->get_pl_temp());
-    printf("min moisture:    %2.2f %%\n", get_ext(Moisture, Min)->get_pl_mstr());
-    printf("max moisture:    %2.2f %%\n", get_ext(Moisture, Max)->get_pl_mstr());
+    printf("min temperature: %2.2f *C\n", get_ext(Ms::Temperature, Ms::Min)->get_pl_temp());
+    printf("max temperature: %2.2f *C\n", get_ext(Ms::Temperature, Ms::Max)->get_pl_temp());
+    printf("min moisture:    %2.2f %%\n", get_ext(Ms::Moisture, Ms::Min)->get_pl_mstr());
+    printf("max moisture:    %2.2f %%\n", get_ext(Ms::Moisture, Ms::Max)->get_pl_mstr());
     
     return &m_extremes;
 }
 
-Measurement* Decoder::get_ext(PayloadType t_type, Extreme t_ext) const {
+Measurement* Decoder::get_ext(Ms::PayloadType t_type, Ms::Extreme t_ext) const {
     switch(t_type) {
-        case PayloadType::Temperature:
+        case Ms::PayloadType::Temperature:
             switch(t_ext) {
-                case Extreme::Min:
+                case Ms::Extreme::Min:
                     if(m_extremes.at(0) != nullptr)
                         return m_extremes.at(0);
                     break;
-                case Extreme::Max:
+                case Ms::Extreme::Max:
                     if(m_extremes.at(1) != nullptr)
                         return m_extremes.at(1);
                     break;
                 default: break;
             }
             break;
-        case PayloadType::Moisture:
+        case Ms::PayloadType::Moisture:
             switch(t_ext) {
-                case Extreme::Min:
+                case Ms::Extreme::Min:
                     if(m_extremes.at(2) != nullptr)
                         return m_extremes.at(2);
                     break;
-                case Extreme::Max:
+                case Ms::Extreme::Max:
                     if(m_extremes.at(3) != nullptr)
                         return m_extremes.at(3);
                     break;
@@ -216,26 +171,26 @@ Measurement* Decoder::get_ext(PayloadType t_type, Extreme t_ext) const {
     return nullptr;
 }
 
-void Decoder::set_ext(PayloadType t_type, Extreme t_ext, Measurement* t_new) {
+void Decoder::set_ext(Ms::PayloadType t_type, Ms::Extreme t_ext, Measurement* t_new) {
     if(t_new != nullptr) {
         switch(t_type) {
-            case PayloadType::Temperature:
+            case Ms::PayloadType::Temperature:
                 switch(t_ext) {
-                    case Extreme::Min:
+                    case Ms::Extreme::Min:
                         m_extremes.at(0) = t_new;
                         break;
-                    case Extreme::Max:
+                    case Ms::Extreme::Max:
                         m_extremes.at(1) = t_new;
                         break;
                     default: break;
                 }
                 break;
-            case PayloadType::Moisture:
+            case Ms::PayloadType::Moisture:
                 switch(t_ext) {
-                    case Extreme::Min:
+                    case Ms::Extreme::Min:
                         m_extremes.at(2) = t_new;
                         break;
-                    case Extreme::Max:
+                    case Ms::Extreme::Max:
                         m_extremes.at(3) = t_new;
                         break;
                     default: break;
@@ -255,10 +210,46 @@ Measurement* Decoder::get_ms(const char* t_time) const {
     
 }
 
-std::vector<Interval*>* Decoder::print_hist(PayloadType t_type, uint32_t t_intervals) {
-    (void) t_type;
-    (void) t_intervals;
-    return nullptr;
+std::vector<Interval*>* Decoder::print_hist(Ms::PayloadType t_type, uint32_t t_intervals) {
+    if(__decoder_dbg__) { __info_all__ printf("printing histogram with %d intervals\n", t_intervals); }
+    m_intervals.clear();
+    m_intervals.resize(t_intervals);
+
+    switch(t_type) {
+        case Ms::Temperature: 
+            print_hist_temp(t_intervals);
+            printf("---- temperature histogram ----\n");
+            break;
+        case Ms::Moisture: 
+            print_hist_mstr(t_intervals);
+            printf("---- moisture histogram ----\n");
+            break;
+        default: break;
+    }
+
+    float l_max_pl = 0.f;
+    // print out the Interval classes and find the max index
+    for(size_t i = 0; i < m_intervals.size(); ++i) {
+        if(m_intervals.at(i)->get_freq() > l_max_pl)
+            l_max_pl = m_intervals.at(i)->get_freq();
+    }
+
+    l_max_pl = 1 / l_max_pl * 30;
+    for(size_t i = 0; i < m_intervals.size(); ++i) {
+        Interval* in = m_intervals.at(i);
+        printf(
+            "[%ld]\t(%.2f, %.2f)\t|%d|\t", 
+            i,
+            in->get_range_fl(Ms::Min), 
+            in->get_range_fl(Ms::Max), 
+            in->get_freq()
+        );
+        for(size_t j = 0; j < in->get_freq() * l_max_pl; ++j) 
+            printf("@");
+        printf("\n");
+    }
+    
+    return &m_intervals;
 }
 
 void Decoder::print_ms(PrintType t_type) {
@@ -285,8 +276,11 @@ void Decoder::print_ms(PrintType t_type) {
             }
             break;
         case PrintType::Original:
-            for(Measurement* m : m_measurements) {
-                std::cout << m->get_og_fmt() << std::endl;
+            for(size_t i = 0; i < m_measurements.size(); ++i) {
+                printf(
+                    "[%ld]\t%s\n", 
+                    i, m_measurements.at(i)->get_og_fmt().c_str() 
+                );
             }
             break;
         default: break;
@@ -294,4 +288,88 @@ void Decoder::print_ms(PrintType t_type) {
     if(__decoder_dbg__) { __info_all__ printf("done printing the measurements\n"); }
 }
 
+bool Decoder::write_to(const char* t_path, PrintType t_type) {
+    if(__decoder_dbg__) {
+        __info_all__ printf("began writing to file %s\n", t_path);
+    }
 
+    std::ofstream l_file(t_path);
+    if(l_file.is_open()) {
+        switch (t_type) {
+            case PrintType::Bits:
+                // doesn't write individual bits 
+                // but does it in form of a decimal number 
+                l_file.close();
+                l_file.open(t_path, std::ios::binary);
+                for(Measurement* m : m_measurements) {
+                    l_file 
+                        << m->get_time_cmp() 
+                        << " " 
+                        << m->get_payload_cmp() 
+                        << std::endl;
+                }
+                break;
+            case PrintType::Original:
+                for(Measurement* m : m_measurements) {
+                    l_file << m->get_og_fmt() << std::endl;
+                }
+                break;
+            case PrintType::Human:
+                char l_str[__buffer_len__] = { 0 };
+                for(size_t i = 0; i < m_measurements.size(); ++i) {
+                    sprintf(l_str,
+                        "[%ld]\ttime %s, payload %s", 
+                        i, m_measurements.at(i)->get_fmtd_tm().c_str(), 
+                        m_measurements.at(i)->get_fmtd_pl().c_str()
+                    );
+                    l_file << l_str << std::endl;
+                }
+                break;
+        }
+        l_file.close();
+        return true;
+    }
+
+    __error_all__ printf("failed to write into file %s\n", t_path);
+    return false;
+}
+
+void Decoder::print_hist_temp(uint32_t t_intervals) {
+    float l_min = get_ext(Ms::Temperature, Ms::Min)->get_pl_temp();
+    float l_max = get_ext(Ms::Temperature, Ms::Max)->get_pl_temp();
+    float l_step = (l_max - l_min) / float(t_intervals);
+
+    for(size_t i = 0; i < t_intervals; ++i) {
+        delete m_intervals[i];
+        m_intervals[i] = new Interval(Ms::Temperature, l_min + i*l_step, l_min + (i+1)*l_step);
+    }
+
+    for(auto m : m_measurements) {
+        float l_temp = m->get_pl_temp() - l_min;
+        uint32_t l_falls_into = floor(l_temp / l_step);
+        if(l_falls_into != t_intervals)
+            m_intervals[l_falls_into]->inc_freq();
+        else 
+            m_intervals[t_intervals - 1]->inc_freq();
+    }
+}
+
+void Decoder::print_hist_mstr(uint32_t t_intervals) {
+    float l_min = get_ext(Ms::Moisture, Ms::Min)->get_pl_mstr();
+    float l_max = get_ext(Ms::Moisture, Ms::Max)->get_pl_mstr();
+    float l_step = (l_max - l_min) / float(t_intervals);
+
+    for(size_t i = 0; i < t_intervals; ++i) {
+        delete m_intervals[i];
+        m_intervals[i] = new Interval(Ms::Moisture, l_min + i*l_step, l_min + (i+1)*l_step);
+    }
+
+    for(auto m : m_measurements) {
+        float l_mstr = m->get_pl_mstr() - l_min;
+        uint32_t l_falls_into = floor(l_mstr / l_step);
+        if(l_falls_into != t_intervals)
+            m_intervals[l_falls_into]->inc_freq();
+        else 
+            m_intervals[t_intervals - 1]->inc_freq();
+    }
+}
