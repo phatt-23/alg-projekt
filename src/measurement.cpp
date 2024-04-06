@@ -56,6 +56,7 @@ Measurement::Measurement(const std::string& t_time, const std::string& t_payload
     m_time[4] |= l_ss_num;
 
     uint64_t l_payload = bit_conv::u128_from(t_payload.c_str());
+
     for(size_t i = 0; i < 5; ++i) {
         m_payload[i] = l_payload >> ((4 - i) * 8);
     }
@@ -76,7 +77,6 @@ Measurement::Measurement(const std::string& t_time, const std::string& t_payload
             t_payload.c_str()
         );
     }
-
 
 }
 
@@ -117,8 +117,10 @@ const uint8_t* Measurement::get_payload_arr() const {
 
 std::string Measurement::get_og_fmt() {
     uint16_t l_time[5] = { 0 };
-    for(size_t i = 0; i < 5; ++i) 
+
+    for(size_t i = 0; i < 5; ++i) {
         l_time[i] = m_time[i];
+    }
 
     uint16_t l_yy_num = l_time[0] << 6 | m_time[1] >> 2;
     uint16_t l_mm_num = (l_time[1] & 0x03) << 2 | l_time[2] >> 6;
@@ -140,13 +142,13 @@ std::string Measurement::get_og_fmt() {
 
 std::string Measurement::get_fmtd_pl() {
     uint32_t l_vltg = 30 * m_payload[0];
-    float l_C = 0.1 * float(256 * m_payload[1] + m_payload[2]);
-    float l_M = 0.1 * float(256 * m_payload[3] + m_payload[4]);
+    float l_C = 0.1f * float(256.0f * float(m_payload[1]) + float(m_payload[2]));
+    float l_M = 0.1f * float(256.0f * float(m_payload[3]) + float(m_payload[4]));
 
     char l_str[__buffer_len__] = { 0 };
     sprintf(
         l_str, 
-        "{ V(mV): %d, t(C): %.2f, M(%%): %.2f }",
+        "{ V = %.4d mV, t = %.2f *C, M = %.2f %% }",
         l_vltg, l_C, l_M
     );
 
@@ -168,8 +170,8 @@ std::string Measurement::get_fmtd_tm() {
     char l_str[__buffer_len__] = { 0 };
     sprintf(
         l_str,
-        "{ (%.4d.%.2d.%.2d) %.2d:%.2d:%.2d }",
-        l_yy_num, l_mm_num, l_dd_num,l_hh_num, l_mn_num, l_ss_num
+        "{ %.4d/%.2d/%.2d %.2d:%.2d:%.2d }",
+        l_yy_num, l_mm_num, l_dd_num, l_hh_num, l_mn_num, l_ss_num
     );
     
     return std::string(l_str);
@@ -180,10 +182,10 @@ uint16_t Measurement::get_pl_vltg() {
 }
 
 float Measurement::get_pl_temp() {
-    return 0.1 * float(256 * m_payload[1] + m_payload[2]);
+    return 0.1f * float(256.0f * float(m_payload[1]) + float(m_payload[2]));
 }
 
 float Measurement::get_pl_mstr() {
-    return 0.1 * float(256 * m_payload[3] + m_payload[4]);
+    return 0.1f * float(256.0f * float(m_payload[3]) + float(m_payload[4]));
 }
 

@@ -149,25 +149,18 @@ void Decoder::rm_dups() {
 
 const std::vector<Measurement*>* Decoder::find_exts() {
     if(__decoder_dbg__) { __info_all__ printf("finding the extremes\n"); }
-    for(Measurement*& m : m_extremes) {
-        if(m == nullptr) {
-            m = m_measurements.at(0);
+    for(size_t i = 0; i < m_extremes.size(); ++i) {
+        if(m_extremes.at(i) == nullptr) {
+            m_extremes[i] = m_measurements.at(0);
         }
     }
 
-    // print extremes -> might factor out to another function
-    printf("min temperature: %.2f\n", get_ext(Temperature, Min)->get_pl_temp());
-    printf("max temperature: %.2f\n", get_ext(Temperature, Max)->get_pl_temp());
-    printf("min moisture: %.2f\n", get_ext(Moisture, Min)->get_pl_mstr());
-    printf("max moisture: %.2f\n", get_ext(Moisture, Max)->get_pl_mstr());
-
-    for(Measurement* m : m_measurements) {
+    for(size_t i = 0; i < m_measurements.size(); ++i) {
+        Measurement* m = m_measurements.at(i);
         if(m->get_pl_temp() < get_ext(Temperature, Min)->get_pl_temp()) {
-            printf("setting min T\n");
             set_ext(Temperature, Min, m);
         }
         if(m->get_pl_temp() > get_ext(Temperature, Max)->get_pl_temp()) {
-            printf("setting max T\n");
             set_ext(Temperature, Max, m);
         }
         if(m->get_pl_mstr() < get_ext(Moisture, Min)->get_pl_mstr()) {
@@ -180,6 +173,11 @@ const std::vector<Measurement*>* Decoder::find_exts() {
     #endif
     }
 
+    // print extremes -> might factor out to another function
+    printf("min temperature: %2.2f %%\n", get_ext(Temperature, Min)->get_pl_temp());
+    printf("max temperature: %2.2f %%\n", get_ext(Temperature, Max)->get_pl_temp());
+    printf("min moisture:    %2.2f %%\n", get_ext(Moisture, Min)->get_pl_mstr());
+    printf("max moisture:    %2.2f %%\n", get_ext(Moisture, Max)->get_pl_mstr());
     
     return &m_extremes;
 }
@@ -224,12 +222,10 @@ void Decoder::set_ext(PayloadType t_type, Extreme t_ext, Measurement* t_new) {
             case PayloadType::Temperature:
                 switch(t_ext) {
                     case Extreme::Min:
-                        if(m_extremes.at(0) != nullptr)
-                            m_extremes.at(0) = t_new;
+                        m_extremes.at(0) = t_new;
                         break;
                     case Extreme::Max:
-                        if(m_extremes.at(1) != nullptr)
-                            m_extremes.at(1) = t_new;
+                        m_extremes.at(1) = t_new;
                         break;
                     default: break;
                 }
@@ -237,18 +233,17 @@ void Decoder::set_ext(PayloadType t_type, Extreme t_ext, Measurement* t_new) {
             case PayloadType::Moisture:
                 switch(t_ext) {
                     case Extreme::Min:
-                        if(m_extremes.at(2) != nullptr)
-                            m_extremes.at(2) = t_new;
+                        m_extremes.at(2) = t_new;
                         break;
                     case Extreme::Max:
-                        if(m_extremes.at(3) != nullptr)
-                            m_extremes.at(3) = t_new;
+                        m_extremes.at(3) = t_new;
                         break;
                     default: break;
                 }
                 break;
             default: break;
         }
+        return;
     }
     __error_all__ printf("requested extreme for setting not defined / found\n");
 }
@@ -283,7 +278,7 @@ void Decoder::print_ms(PrintType t_type) {
         case PrintType::Human:
             for(size_t i = 0; i < m_measurements.size(); ++i) {
                 printf(
-                    "[%ld]\ttime %s, payload %s\n", 
+                    "[%ld]\t %s -> %s\n", 
                     i, m_measurements.at(i)->get_fmtd_tm().c_str(), 
                     m_measurements.at(i)->get_fmtd_pl().c_str()
                 );
