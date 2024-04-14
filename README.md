@@ -17,11 +17,11 @@ Run `./iotdec --help` to see the usage.
 
 Test it with test data, run
 ```
-`./target/iotdec iot_sensor_data_1.txt iot_output.txt`
+./target/iotdec iot_sensor_data_1.txt iot_output.txt
 ```
 or
 ```
-`./target/iotdec iot_sensor_data_2.txt iot_output.txt`.
+./target/iotdec iot_sensor_data_2.txt iot_output.txt
 ```
 
 ## Documentation
