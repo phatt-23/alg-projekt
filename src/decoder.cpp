@@ -25,6 +25,12 @@ Decoder::~Decoder() {
     }
     for(size_t i = 0; i < 4; ++i)
         m_extremes.emplace_back(nullptr);
+
+    for(auto m : m_measurements)
+        delete m;
+    
+    for(auto i : m_intervals)
+        delete i;
 }
 
 
@@ -96,13 +102,17 @@ void Decoder::rm_dups() {
     if(__decoder_dbg__) { __info_all__ printf("began removing duplicates\n"); }
     for(size_t i = 1; i < m_measurements.size(); ++i) {
         if(m_measurements[i - 1]->get_time_cmp() == m_measurements[i]->get_time_cmp()) {
-            m_measurements.erase(m_measurements.begin() + i-- - 1);
+            auto pos = m_measurements.begin() + i - 1;
+            Measurement* l_ptr = m_measurements[i - 1];
+            m_measurements.erase(pos);
+            delete l_ptr;
+            i--;
         }
     }
     if(__decoder_dbg__) { __info_all__ printf("done removing duplicates\n"); }
 }
 
-const std::vector<Measurement*>* Decoder::find_exts() {
+std::vector<Measurement*>* Decoder::find_exts() {
     if(__decoder_dbg__) { __info_all__ printf("finding the extremes\n"); }
     for(size_t i = 0; i < m_extremes.size(); ++i) {
         if(m_extremes.at(i) == nullptr) {
@@ -124,8 +134,6 @@ const std::vector<Measurement*>* Decoder::find_exts() {
         if(m->get_pl_mstr() > get_ext(Ms::Moisture, Ms::Max)->get_pl_mstr()) {
             set_ext(Ms::Moisture, Ms::Max, m);
         }
-    #if 0
-    #endif
     }
 
     // print extremes -> might factor out to another function
@@ -205,13 +213,19 @@ void Decoder::set_ext(Ms::PayloadType t_type, Ms::Extreme t_ext, Measurement* t_
 
 
 Measurement* Decoder::get_ms(const char* t_time) const {
-    (void) t_time;
+    for(auto m : m_measurements) {
+        if(!strncmp(m->get_og_fmt().c_str(), t_time, strlen("xx-xx-xxTxx:xx:xx"))) {
+            return m;
+        }
+    }
     return nullptr;
-    
 }
 
 std::vector<Interval*>* Decoder::print_hist(Ms::PayloadType t_type, uint32_t t_intervals) {
     if(__decoder_dbg__) { __info_all__ printf("printing histogram with %d intervals\n", t_intervals); }
+    for(auto m_i : m_intervals) {
+        delete m_i;
+    }
     m_intervals.clear();
     m_intervals.resize(t_intervals);
 

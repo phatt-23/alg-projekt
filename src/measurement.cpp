@@ -189,3 +189,6 @@ float Measurement::get_pl_mstr() {
     return 0.1f * float(256.0f * float(m_payload[3]) + float(m_payload[4]));
 }
 
+void Measurement::print_og() {
+    printf("%s\n", get_og_fmt().c_str());
+}

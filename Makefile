@@ -30,11 +30,11 @@ endif
 SHOW_CMD ?= @
 LDFLAGS  :=
 LIBS     := 
-OPTI	   ?= -O3
+OPTI	 ?= -O3
 VAL      := valgrind -q --tool=memcheck --track-origins=no --error-exitcode=1 --track-origins=yes
 
 ASM_C   	:= nasm
-ASM_FLAGS := -f elf64
+ASM_FLAGS   := -f elf64
 SRC_DIR 	:= src
 OBJ_DIR 	:= target/debug
 BIN_DIR 	:= target
@@ -45,7 +45,7 @@ OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(patsubst $(SRC_DIR)/%.cpp, 
 ASM_SRCS := $(wildcard $(SRC_DIR)/*.asm)
 ASM_OBJS := $(patsubst $(SRC_DIR)/%.asm, $(OBJ_DIR)/%.o, $(ASM_SRCS))
 
-TARGET 		 := $(BIN_DIR)/cxx_program
+TARGET 	   := $(BIN_DIR)/iotdec
 ASM_TARGET := $(BIN_DIR)/asm_program
 
 
