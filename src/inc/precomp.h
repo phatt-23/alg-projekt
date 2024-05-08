@@ -32,13 +32,13 @@
 
 
 #if 0 // 1 if debugging
-#define __decoder_dbg__     true
-#define __measurement_dbg__ true
-#define __interval_dbg__    true
+    #define __decoder_dbg__     true
+    #define __measurement_dbg__ true
+    #define __interval_dbg__    true
 #else // release
-#define __decoder_dbg__     false
-#define __measurement_dbg__ false
-#define __interval_dbg__    false
+    #define __decoder_dbg__     false
+    #define __measurement_dbg__ false
+    #define __interval_dbg__    false
 #endif
 
 

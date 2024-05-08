@@ -129,6 +129,10 @@ public:
      * @brief Print the original formatted string representation of the measurement.
      */
     void print_og();
+    /**
+     * @brief Print the formatted string representation of the measurement.
+     */
+    void print_formated();
 };
 
 #endif//__measuerement_h__

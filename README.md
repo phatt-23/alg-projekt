@@ -1,27 +1,33 @@
-# Project Algorithms I.
+# Algorithms I. - Project
 
 ## About
 
-This project decodes IoT sensor data from an inputed file.
+IoT Decoder.
 
 ## Compilation
 
-Before compiling, clone the repo by running `git clone https://github.com/phatt-23/alg-projekt.git`.
-To compile it run `make` from the working directory.
+To compile, run `make` from the workdir.
 
-The binary is in the `target` directory and is called `iotdec`.
+The executable is named `iotdecoder`.
 
 ## Usage
 
-Run `./iotdec --help` to see the usage.
-
-Test it with test data, run
+``` bash
+  $ ./iotdecoder [input] [output] [num_of_intervals]
+	 [input]  - input file required
+	 [output] - output file required
+	 [num_of_intervals] - number of intervals of the histogram
 ```
-./target/iotdec iot_sensor_data_1.txt iot_output.txt
+
+Test it with test data, run for example:
+
+``` bash
+./target/iotdec iot_sensor_data_1.txt iot_output.txt 12
 ```
 or
-```
-./target/iotdec iot_sensor_data_2.txt iot_output.txt
+
+``` bash
+./target/iotdec iot_sensor_data_2.txt iot_output.txt 12
 ```
 
 ## Documentation

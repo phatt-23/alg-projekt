@@ -192,3 +192,7 @@ float Measurement::get_pl_mstr() {
 void Measurement::print_og() {
     printf("%s\n", get_og_fmt().c_str());
 }
+
+void Measurement::print_formated() {
+    printf("%s %s\n", get_fmtd_tm().c_str(), get_fmtd_pl().c_str());
+}
