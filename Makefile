@@ -5,7 +5,12 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
 PROGRAM = iotdecoder
 
 all:
-	$(CC) $(SRC_FILES) $(CFLAGS) -o$(PROGRAM)
+	@echo "Compiling and creating doxy documentation..."
+	@$(CC) $(SRC_FILES) $(CFLAGS) -o $(PROGRAM)
+	@doxygen Doxyfile
 
 clean:
-	rm $(PROGRAM)
+	@echo "Removing the executable and doxy documentation..."
+	@rm $(PROGRAM)
+	@rm -r doxy
+
